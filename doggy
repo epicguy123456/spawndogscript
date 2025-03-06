@@ -1,29 +1,47 @@
--- Crea la interfaz de usuario
+-- Crea la interfaz de usuario con mejor diseño y funcionalidad
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
 local TextLabel = Instance.new("TextLabel")
 local Button = Instance.new("TextButton")
+local MinimizeButton = Instance.new("TextButton")
+local Dragging, DragInput, StartPosition, StartMousePosition
 
 -- Configuración del ScreenGui
 ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
 
 -- Configuración del Frame
 Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 250, 0, 150)
-Frame.Position = UDim2.new(0.5, -125, 0.5, -75)
-Frame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Frame.Size = UDim2.new(0, 300, 0, 180)
+Frame.Position = UDim2.new(0.5, -150, 0.5, -90)
+Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 Frame.BorderSizePixel = 2
+Frame.Active = true
+Frame.Draggable = true
+Frame.ClipsDescendants = true
+Frame.Visible = true
 
 -- Configuración del TextLabel (Título)
 TextLabel.Parent = Frame
-TextLabel.Size = UDim2.new(1, 0, 0.3, 0)
+TextLabel.Size = UDim2.new(1, -30, 0.2, 0)
+TextLabel.Position = UDim2.new(0, 10, 0, 5)
 TextLabel.BackgroundTransparency = 1
 TextLabel.Text = "Eco Hub Spawn Dog Script"
 TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel.TextSize = 14
+TextLabel.TextSize = 16
 TextLabel.Font = Enum.Font.SourceSansBold
+TextLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- Configuración del botón
+-- Configuración del botón de minimizar
+MinimizeButton.Parent = Frame
+MinimizeButton.Size = UDim2.new(0, 20, 0, 20)
+MinimizeButton.Position = UDim2.new(1, -25, 0, 5)
+MinimizeButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 16
+MinimizeButton.Font = Enum.Font.SourceSansBold
+
+-- Configuración del botón de acción
 Button.Parent = Frame
 Button.Size = UDim2.new(0.8, 0, 0.4, 0)
 Button.Position = UDim2.new(0.1, 0, 0.5, 0)
@@ -32,10 +50,52 @@ Button.Text = "Spawn Dog No Cooldown"
 Button.TextColor3 = Color3.fromRGB(255, 255, 255)
 Button.TextSize = 14
 Button.Font = Enum.Font.SourceSansBold
+Button.AutoButtonColor = true
 
--- Función al hacer clic en el botón
+-- Función para spawnear el perro
 Button.MouseButton1Click:Connect(function()
     print("Intentando spawnear perro...")
     game:GetService("ReplicatedStorage"):WaitForChild("PetModRemotes"):WaitForChild("OnSpawnEggUsed"):FireServer("Dog")
     print("Evento enviado.")
+end)
+
+-- Funcionalidad de minimizar
+local minimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        Frame.Size = UDim2.new(0, 300, 0, 30)
+        Button.Visible = false
+    else
+        Frame.Size = UDim2.new(0, 300, 0, 180)
+        Button.Visible = true
+    end
+end)
+
+-- Hacer que el Frame sea arrastrable manualmente
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = true
+        StartPosition = Frame.Position
+        StartMousePosition = input.Position
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        DragInput = input
+    end
+end)
+
+Frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        Dragging = false
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if input == DragInput and Dragging then
+        local Delta = input.Position - StartMousePosition
+        Frame.Position = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+    end
 end)
